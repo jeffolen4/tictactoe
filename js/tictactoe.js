@@ -37,6 +37,7 @@ appTicTacToe.createBoard = function () {
   var board = function () {
     this.identity = appTicTacToe.nextBoardId++;
     this.matrix = [];
+    this.currentPlayer;
     this.initialize = function () {
       for (var x=0; x < 9; x++ ) {
         this.matrix.push(false);

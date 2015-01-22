@@ -68,20 +68,46 @@ $(document).ready( function () {
 
   }
 
-  function getCurrentLocation( x, y ) {
+  function getCurrentPosition( x, y ) {
+
+    currentPos = false;
+
+    for (var pos = 0; pos < 9; pos++ ) {
+      if (   x >= board.location[pos].upperLeft[0]
+          && x <= board.location[pos].lowerRight[0]
+          && y >= board.location[pos].upperLeft[1]
+          && y <= board.location[pos].lowerRight[1] ) {
+        currentPos = pos;
+      };
+    };
+    return currentPos;
   }
 
   $("#mycanvas").click( function (event) {
+
+    pos = getCurrentPosition( event.offsetX, event.offsetY );
+
+    if ( board.currentPlayer === playerX ) {
+      drawX( canvas, board.location[pos].upperLeft[0], board.location[pos].upperLeft[1]);
+    } else {
+      drawO( canvas, board.location[pos].upperLeft[0], board.location[pos].upperLeft[1]);
+    }
+
+    board.currentPlayer = !(board.currentPlayer);
+
   })
-
-
 
   var board = createBoard();
   board.initialize();
 
   drawBoard( canvas );
 
-  drawO( canvas, board.location[4].upperLeft[0], board.location[4].upperLeft[1]);
+  playerX = false;
+  playerY = true;
+
+  board.currentPlayer = playerX;  // X always starts
+
+  //drawO( canvas, board.location[4].upperLeft[0], board.location[4].upperLeft[1]);
 
 
   // drawX( canvas, 0  ,0);
