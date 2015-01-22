@@ -1,213 +1,112 @@
 $(document).ready( function () {
 
+  var createBoard = appTicTacToe.createBoard;
 
-var matrix = appLifeGame.matrix;
-var canvas = $("#life-canvas");
-var start = $("#start");
+  var canvas = document.getElementById("mycanvas");
 
-var Life = {};
+  function drawBoard ( canvas ) {
 
-Life.CELL_SIZE = 4;
-Life.X = 400;
-Life.Y = 400;
-Life.WIDTH = Life.X / Life.CELL_SIZE;
-Life.HEIGHT = Life.Y / Life.CELL_SIZE;
-Life.DELAY = 200;
-Life.STOPPED = 0;
-Life.RUNNING = 1;
+    var ctx = canvas.getContext("2d");
 
-Life.minimum = 2;
-Life.maximum = 3;
-Life.spawn = 3;
+    ctx.lineWidth = 7;
 
-Life.state = Life.STOPPED;
-Life.generations = 200;
-Life.currentGeneration = 0;
+    ctx.moveTo(85, 0)
+    ctx.lineTo(85, 230)
+    ctx.stroke();
 
-var lifeCanvas = $("#life-canvas");
-lifeCanvas.css("height",Life.Y);
-lifeCanvas.css("width", Life.X);
+    ctx.moveTo(180, 0)
+    ctx.lineTo(180, 230)
+    ctx.stroke();
 
-var ctx = document.getElementById("life-canvas").getContext("2d");
 
-// build initial matrix ( all dead )
-Life.grid = matrix(Life.HEIGHT, Life.WIDTH, false);
-Life.initialState = Life.grid;
+    ctx.moveTo(0, 70)
+    ctx.lineTo(265, 70)
+    ctx.stroke();
 
-Life.counter = 0;
+    ctx.moveTo(0, 150)
+    ctx.lineTo(265, 150)
+    ctx.stroke();
 
-// set initial state
-function setDefaultInitialState() {
-  Life.grid[25][15] = true;
-  Life.grid[26][18] = true;
-  Life.grid[27][14] = true;
-  Life.grid[27][15] = true;
-  Life.grid[27][16] = true;
-  Life.grid[27][17] = true;
-  Life.grid[27][18] = true;
-}
-
-function evaluateNeighbors ( x, y ) {
-  // subtract out current position before evaluating grid
-  var total = ( Life.grid[x][y] ) ? -1 : 0;
-
-  // evaluate all neighbors to find count of living
-  for ( var h=-1; h <= 1; h++ ) {
-    for ( v=-1;  v <= 1; v++ ) {
-      if ( x + h >= 0
-          && y + v >= 0
-          && x + h < Life.WIDTH
-          && x + v < Life.HEIGHT ) {
-        if ( (Life.grid[ x + h ][ y + v ]) ) {
-          total++;
-        };
-      };
-    };
-  };
-  return total;
-}
-
-// evaluate all cells and build new matrix for next generation
-function nextGeneration () {
-
-  var changes = false;
-
-  Life.nextGrid = matrix(Life.HEIGHT, Life.WIDTH, false);
-
-  for ( var h=0; h < Life.WIDTH; h++ ) {
-    for ( var v=0; v < Life.HEIGHT; v++ ) {
-
-      // get the number of living neighbors
-      var aliveCount = evaluateNeighbors( h, v )
-
-      switch (true) {
-        // Live cell dies if less than 2 live neighbors
-        case ( Life.grid[h][v] && aliveCount < Life.minimum ) :
-          Life.nextGrid[h][v] = false;
-          changes = true;
-          break;
-        // Live cell dies if more than 3 live neighbors
-        case ( Life.grid[h][v] && aliveCount > Life.maximum ) :
-          Life.nextGrid[h][v] = false;
-          changes = true;
-          break;
-        // Live cell continues to next generation if
-        //   exactly 2 or 3 living neighbors
-        case ( Life.grid[h][v] &&
-                ( aliveCount === Life.minimum || aliveCount === Life.maximum ) ) :
-          Life.nextGrid[h][v] = true;
-          break;
-        // Dead cell regenerates if exactly 3 living neighbors
-        case ( !(Life.grid[h][v]) && aliveCount === Life.maximum ) :
-          Life.nextGrid[h][v] = true;
-          changes = true;
-          break;
-      }
-    }
   }
-  // return the updated
-  if ( changes ) {
-    return Life.nextGrid;
-  } else {
-    return false;
+
+  function drawO ( canvas, x, y) {
+
+    var ctx = canvas.getContext("2d");
+
+    ctx.beginPath();
+    ctx.lineWidth = 7;
+
+    ctx.arc(x+37, y+30, 30, 0, 2 * Math.PI);
+    ctx.stroke();
+
   }
-}
 
-function renderCell( currentState, x, y ) {
-  if ( currentState ) {
-    ctx.fillStyle = "white";
-  } else {
-    ctx.fillStyle = "black";
+  function drawX ( canvas, x, y) {
+    var ctx = canvas.getContext("2d");
+
+    var x2 = x + 7
+
+    ctx.lineWidth = 1;
+
+    // move to x,y coordinates
+    ctx.fillStyle = "blue";
+    ctx.moveTo(x2    , y   );
+    ctx.lineTo(x2+23 , y+30);
+    ctx.lineTo(x2    , y+60);
+    ctx.lineTo(x2+7  , y+60);
+    ctx.lineTo(x2+27 , y+33);
+    ctx.lineTo(x2+46 , y+60);
+    ctx.lineTo(x2+53 , y+60);
+    ctx.lineTo(x2+32 , y+30);
+    ctx.lineTo(x2+53 , y   );
+    ctx.lineTo(x2+46 , y   );
+    ctx.lineTo(x2+27 , y+25);
+    ctx.lineTo(x2+7  , y   );
+    ctx.lineTo(x2    , y   );
+    ctx.stroke();
+    ctx.fill();
+
   }
-  ctx.fillRect( (x*Life.CELL_SIZE), (y*Life.CELL_SIZE), 4, 4 );
 
-}
-
-function renderGrid( currentGrid ) {
-
-  for ( var h=0; h < Life.WIDTH; h++ ) {
-    for ( var v=0; v < Life.HEIGHT; v++ ) {
-      renderCell( currentGrid[h][v], h, v);
-    };
-  };
-
-}
-
-function next () {
-  // increment the generation
-  Life.currentGeneration++;
-  // if we have reached the set number of generations
-  //   then clear the interval
-  if ( Life.currentGeneration >= Life.generations ) {
-    clearInterval( Life.interval );
-  } else {
-    Life.grid = nextGeneration( Life.grid );
-    // nextGeneration will return false if nothing changed
-    //  if that occurs then clear the interval.
-    if ( !(Life.grid) ) {
-      clearInterval( Life.interval );
-    } else {
-      // otherwise re-render the grid
-      renderGrid( Life.grid );
-    }
+  function getCurrentLocation( x, y ) {
   }
-}
 
-// click on the canvas to set the initial state
-canvas.click( function (event) {
-
-  var x = Math.floor(event.offsetX / Life.CELL_SIZE);
-  var y = Math.floor(event.offsetY / Life.CELL_SIZE);
-
-  // toggle current state of selected cell
-  Life.grid[x][y] = !(Life.grid[x][y]);
-
-  // render only that cell
-  renderCell( Life.grid[x][y], x, y );
-
-  return false;
-})
-
-start.click( function (e) {
-  // save the current initial state to allow for reset
-  Life.initialState = Life.grid;
-  // reset the current generation to zero
-  Life.currentGeneration = 0;
-  // render the initial grid
-  renderGrid( Life.grid );
-  // set the interval for subsequent generations
-  Life.interval = setInterval( next, Life.DELAY );
-})
-
-$("#default").click( function (e) {
-  // reset to blank grid
-  Life.grid = matrix(Life.HEIGHT, Life.WIDTH, false);
-  // set the default initial state
-  setDefaultInitialState();
-  // render the grid
-  renderGrid( Life.grid );
-})
-
-$("#reset").click( function (e) {
-  // reset to blank grid
-  Life.grid = Life.initialState;
-  renderGrid( Life.grid );
-})
-
-$("#clear").click( function (e) {
-  // reset to blank grid
-  Life.grid = matrix(Life.HEIGHT, Life.WIDTH, false);
-  renderGrid( Life.grid );
-})
-
-$("#stop").click( function () {
-  Life.currentGeneration = Life.generations;
-})
+  $("#mycanvas").click( function (event) {
+  })
 
 
-// initialize display;
-ctx.rect( 0, 0, Life.X, Life.Y );
-ctx.fillStyle = "black";
-ctx.fill();
+
+  var board = createBoard();
+  board.initialize();
+
+  drawBoard( canvas );
+
+  drawO( canvas, board.location[4].upperLeft[0], board.location[4].upperLeft[1]);
+
+
+  // drawX( canvas, 0  ,0);
+  // drawX( canvas, 100,0);
+  // drawX( canvas, 200,0);
+  //
+  // drawY( canvas, 0  ,0);
+  // drawY( canvas, 100,0);
+  // drawY( canvas, 200,0);
+  //
+  // drawX( canvas, 0  ,80);
+  // drawX( canvas, 100,80);
+  // drawX( canvas, 200,80);
+  //
+  // drawY( canvas, 0  ,80);
+  // drawY( canvas, 100,80);
+  // drawY( canvas, 200,80);
+  //
+  // drawX( canvas, 0  ,160);
+  // drawX( canvas, 100,160);
+  // drawX( canvas, 200,160);
+  //
+  // drawY( canvas, 0  ,160);
+  // drawY( canvas, 100,160);
+  // drawY( canvas, 200,160);
+
 
 })
